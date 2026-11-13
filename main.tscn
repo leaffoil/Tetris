@@ -3,8 +3,7 @@
 [ext_resource type="Script" uid="uid://bi1t34lg160w8" path="res://board.gd" id="1_ig7tw"]
 
 [node name="Main" type="Node2D" unique_id=1115265184]
-script = ExtResource("1_ig7tw")
 
-[node name="Node2D" type="Node2D" parent="." unique_id=1741890407]
+[node name="board" type="Node2D" parent="." unique_id=1741890407]
 position = Vector2(480, 40)
 script = ExtResource("1_ig7tw")

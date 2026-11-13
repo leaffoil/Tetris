@@ -5,6 +5,10 @@ const ROWS := 20
 const CELL := 32
 const LINE_POINTS := [0, 40, 100, 300, 1200]
 
+const DAS := 0.17             
+const ARR := 0.05              
+const SOFT_DROP_INTERVAL := 0.04
+
 var grid: Array = []
 var bag: Array = []
 
@@ -22,6 +26,10 @@ var lines := 0
 var level := 0
 var start_level := 0
 var speed_mult := 1.0
+
+var hold_dir := 0
+var das_timer := 0.0
+var soft_timer := SOFT_DROP_INTERVAL
 
 
 func _ready() -> void:
@@ -91,9 +99,15 @@ func try_rotate() -> void:
 			return
 
 
+func get_ghost_pos() -> Vector2i:
+	var pos := piece_pos
+	while is_valid(piece_cells, pos + Vector2i(0, 1)):
+		pos += Vector2i(0, 1)
+	return pos
+
+
 func hard_drop() -> void:
-	while try_move(Vector2i(0, 1)):
-		pass
+	piece_pos = get_ghost_pos()
 	lock_piece()
 
 
@@ -140,12 +154,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file("res://menu.tscn")
 		return
 	if event.is_action_pressed("move_left"):
+		hold_dir = -1
+		das_timer = 0.0
 		try_move(Vector2i(-1, 0))
 	elif event.is_action_pressed("move_right"):
+		hold_dir = 1
+		das_timer = 0.0
 		try_move(Vector2i(1, 0))
-	elif event.is_action_pressed("soft_drop"):
-		step_down()
-		fall_timer = 0.0
 	elif event.is_action_pressed("rotate_cw"):
 		try_rotate()
 	elif event.is_action_pressed("hard_drop"):
@@ -156,11 +171,41 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(delta: float) -> void:
 	if is_game_over:
 		return
+	handle_held_keys(delta)
 	fall_timer += delta
 	if fall_timer >= fall_interval:
 		fall_timer = 0.0
 		step_down()
 	queue_redraw()
+
+
+func handle_held_keys(delta: float) -> void:
+	# Left / right sliding while the key is held
+	if hold_dir != 0:
+		var action := "move_left" if hold_dir < 0 else "move_right"
+		if Input.is_action_pressed(action):
+			das_timer += delta
+			if das_timer >= DAS:
+				das_timer -= ARR
+				try_move(Vector2i(hold_dir, 0))
+		else:
+			hold_dir = 0
+			if Input.is_action_pressed("move_left"):
+				hold_dir = -1
+				das_timer = 0.0
+			elif Input.is_action_pressed("move_right"):
+				hold_dir = 1
+				das_timer = 0.0
+
+	# Soft drop while holding Down
+	if Input.is_action_pressed("soft_drop"):
+		soft_timer += delta
+		if soft_timer >= SOFT_DROP_INTERVAL:
+			soft_timer = 0.0
+			step_down()
+			fall_timer = 0.0
+	else:
+		soft_timer = SOFT_DROP_INTERVAL
 
 
 func _draw() -> void:
@@ -169,8 +214,12 @@ func _draw() -> void:
 		for x in COLS:
 			if grid[y][x] != null:
 				draw_block(x, y, grid[y][x])
-	if piece_name != "":
+	if piece_name != "" and not is_game_over:
 		var color: Color = Tetrominoes.SHAPES[piece_name].color
+		# Ghost piece first, so the real piece draws on top of it
+		var gp := get_ghost_pos()
+		for c in piece_cells:
+			draw_ghost_block(gp.x + c.x, gp.y + c.y, color)
 		for c in piece_cells:
 			draw_block(piece_pos.x + c.x, piece_pos.y + c.y, color)
 	draw_hud()
@@ -197,3 +246,9 @@ func draw_block(x: int, y: int, color: Color) -> void:
 	var r := Rect2(x * CELL, y * CELL, CELL, CELL)
 	draw_rect(r, color)
 	draw_rect(r, color.darkened(0.4), false, 2.0)
+
+
+func draw_ghost_block(x: int, y: int, color: Color) -> void:
+	var r := Rect2(x * CELL, y * CELL, CELL, CELL)
+	draw_rect(r, Color(color, 0.2))
+	draw_rect(r, Color(color, 0.7), false, 2.0)
