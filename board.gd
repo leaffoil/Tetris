@@ -150,8 +150,8 @@ func clear_lines() -> int:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if is_game_over:
-		if event is InputEventKey and event.pressed and event.keycode == KEY_ENTER:
-			get_tree().change_scene_to_file("res://menu.tscn")
+		if event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
+			get_tree().reload_current_scene()
 		return
 	if event.is_action_pressed("move_left"):
 		hold_dir = -1
