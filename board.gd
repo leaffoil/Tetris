@@ -149,9 +149,14 @@ func clear_lines() -> int:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Esc = back to the difficulty menu at any time
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		get_tree().change_scene_to_file("res://menu.tscn")
+		return
 	if is_game_over:
+		# Enter = back to the difficulty menu after dying
 		if event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_KP_ENTER):
-			get_tree().reload_current_scene()
+			get_tree().change_scene_to_file("res://menu.tscn")
 		return
 	if event.is_action_pressed("move_left"):
 		hold_dir = -1

@@ -16,14 +16,20 @@ func _ready() -> void:
 	title.add_theme_font_size_override("font_size", 56)
 	box.add_child(title)
 
+	var normal_button: Button = null
 	for d in GameState.SETTINGS:
 		var b := Button.new()
 		b.text = GameState.SETTINGS[d].name
 		b.custom_minimum_size = Vector2(260, 52)
 		b.pressed.connect(_on_pick.bind(d))
 		box.add_child(b)
+		if d == GameState.Difficulty.NORMAL:
+			normal_button = b
+
+	if normal_button != null:
+		normal_button.grab_focus()
 
 
 func _on_pick(d: int) -> void:
 	GameState.difficulty = d
-	get_tree().change_scene_to_file("res://menu.tscn")
+	get_tree().change_scene_to_file("res://main.tscn")
