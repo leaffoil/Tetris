@@ -1,11 +1,11 @@
 extends Node
 
+enum Difficulty { EASY, NORMAL, HARD }
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	pass # Replace with function body.
+const SETTINGS := {
+	Difficulty.EASY: {"name": "Easy", "start_level": 0, "speed_mult": 0.8},
+	Difficulty.NORMAL: {"name": "Normal", "start_level": 0, "speed_mult": 1.0},
+	Difficulty.HARD: {"name": "Hard", "start_level": 5, "speed_mult": 1.3},
+}
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+var difficulty: int = Difficulty.NORMAL
